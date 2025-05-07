@@ -206,7 +206,7 @@ if __name__ == "__main__":
         'rho': 980,                # kg/m^3 (e.g., organic liquid)
         'Cp_params': {'alpha': 2000, 'beta': 0.5, 'gamma': 0.0001}, # J/kg.K based
         'F_A0': 0.1,               # mol/s
-        'C_A0': 1000,              # mol/m^3 (1.0 mol/L)
+        'C_A0': 1,              # mol/m^3 (1.0 mol/L)
         'T0': 303.15,              # K (30 C) - Inlet temperature
         'V_max_integration': 5.0   # Max PFR volume to try integrating up to (m^3)
     }
@@ -226,25 +226,25 @@ if __name__ == "__main__":
         print(f"Outlet Temperature (T_outlet): {T_outlet:.2f} K ({T_outlet - 273.15:.2f} °C)")
 
         # Optional: Plotting the profiles
-        import matplotlib.pyplot as plt
-        fig, ax1 = plt.subplots()
+        # import matplotlib.pyplot as plt
+        # fig, ax1 = plt.subplots()
 
-        color = 'tab:red'
-        ax1.set_xlabel('Reactor Volume (m^3)')
-        ax1.set_ylabel('Conversion (X)', color=color)
-        ax1.plot(V_prof, X_prof, color=color, linestyle='-')
-        ax1.tick_params(axis='y', labelcolor=color)
-        ax1.grid(True)
+        # color = 'tab:red'
+        # ax1.set_xlabel('Reactor Volume (m^3)')
+        # ax1.set_ylabel('Conversion (X)', color=color)
+        # ax1.plot(V_prof, X_prof, color=color, linestyle='-')
+        # ax1.tick_params(axis='y', labelcolor=color)
+        # ax1.grid(True)
 
-        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
-        color = 'tab:blue'
-        ax2.set_ylabel('Temperature (K)', color=color)
-        ax2.plot(V_prof, T_prof, color=color, linestyle='--')
-        ax2.tick_params(axis='y', labelcolor=color)
+        # ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+        # color = 'tab:blue'
+        # ax2.set_ylabel('Temperature (K)', color=color)
+        # ax2.plot(V_prof, T_prof, color=color, linestyle='--')
+        # ax2.tick_params(axis='y', labelcolor=color)
 
-        fig.tight_layout()  # otherwise the right y-label is slightly clipped
-        plt.title('PFR Conversion and Temperature Profiles')
-        plt.show()
+        # fig.tight_layout()  # otherwise the right y-label is slightly clipped
+        # plt.title('PFR Conversion and Temperature Profiles')
+        # plt.show()
 
     except (ValueError, RuntimeError) as e:
         print(f"\nError: {e}")
