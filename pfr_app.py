@@ -7,7 +7,7 @@ st.title("Plug Flow Reactor (PFR) Simulator")
 
 # Sidebar Inputs
 st.sidebar.header("Reaction Parameters")
-XA_target = st.sidebar.slider("Target Conversion (X_A)", 0.01, 1.0, 0.85, step=0.01)
+XA_target = st.sidebar.slider("Target Conversion (X_A)", 0.01, 1.0, 0.45, step=0.01)
 use_direct_A = st.sidebar.checkbox("Provide Pre-exponential Factor (A)?", value=False)
 
 if use_direct_A:
@@ -24,14 +24,14 @@ Ea = st.sidebar.number_input("Activation Energy Ea (J/mol)", value=75000)
 st.sidebar.header("Heat Transfer & Reactor Settings")
 U = st.sidebar.number_input("Overall Heat Transfer Coefficient U (W/m².K)", value=300.0)
 a_v = st.sidebar.number_input("Area per Unit Volume a_v (1/m)", value=15.0)
-T_a = st.sidebar.number_input("Coolant Temperature T_a (K)", value=293.15)
+T_a = st.sidebar.number_input("Ambient Temperature T_a (K)", value=293.15)
 
 delta_H_rxn = st.sidebar.number_input("ΔH_rxn (J/mol)", value=-55000.0)
 
 st.sidebar.header("Feed Properties")
 rho = st.sidebar.number_input("Density ρ (kg/m³)", value=980.0)
 F_A0 = st.sidebar.number_input("Inlet Molar Flow Rate F_A0 (mol/s)", value=0.1)
-C_A0 = st.sidebar.number_input("Inlet Concentration C_A0 (mol/m³)", value=1000.0)
+C_A0 = st.sidebar.number_input("Inlet Concentration C_A0 (mol/m³)", value=1.0)
 T0 = st.sidebar.number_input("Inlet Temperature T₀ (K)", value=303.15)
 
 st.sidebar.header("Cp(T) Parameters")
@@ -39,7 +39,7 @@ alpha = st.sidebar.number_input("Cp α", value=2000.0)
 beta = st.sidebar.number_input("Cp β", value=0.5)
 gamma = st.sidebar.number_input("Cp γ", value=0.0001)
 
-V_max_integration = st.sidebar.slider("Max Reactor Volume to Simulate (m³)", 0.1, 20.0, 5.0, step=0.1)
+V_max_integration = st.sidebar.slider("Max Reactor Volume to Simulate (m³)", 0.1, 20.0, 10.0, step=0.1)
 
 if st.button("Simulate PFR"):
     with st.spinner("Solving..."):
@@ -66,11 +66,29 @@ if st.button("Simulate PFR"):
             st.metric("Outlet Temperature", f"{T_outlet:.2f} K")
             st.metric("Achieved Conversion", f"{X_achieved:.3f}")
 
-            st.subheader("Conversion Profile")
-            st.line_chart(data={'Conversion X': X_profile}, x=V_profile)
+            # st.subheader("Conversion Profile")
+            # st.line_chart(data={'Conversion X': X_profile}, x=V_profile)
 
-            st.subheader("Temperature Profile")
-            st.line_chart(data={'Temperature (K)': T_profile}, x=V_profile)
+            # st.subheader("Temperature Profile")
+            # st.line_chart(data={'Temperature (K)': T_profile}, x=V_profile)
+              # Assumptions Table
+            st.subheader("Assumptions Used in Simulation")
+            st.markdown(
+            """
+| Category      | Assumption                                               |
+|---------------|----------------------------------------------------------|
+| Plug Flow     | No axial dispersion or back-mixing                       |
+| Stoichiometry | Single A → B reaction, 1:1 molar ratio                   |
+| Kinetics      | Rate = k(T)·C_A·C_B; k(T)=k0·exp((–Ea/R)/(1/T - 1/T)))   |
+| Density       | Constant ρ; volumetric flow = F_A0/C_A0                  |
+| Heat Capacity | Cₚ,i(T)=αᵢ+βᵢT+γᵢT² ; Cp_A = Cp_B ; (del Cp=0)            |
+| Heat Transfer | Lumped U·a_v·(T_amb–T) to infinite‐sink ambient          |
+| Numerics      | Stop when X hits target (after tiny V>1e–6 to avoid V=0) |
+            """
+        ) 
 
         except Exception as e:
-            st.error(f"⚠️ Error: {e}")
+            st.error("Error: The required reactor volume exceeds the maximum capacity we can provide. "  
+                     "The maximum allowable volume is 20 m³, but the requested volume is greater than this limit.")
+
+
