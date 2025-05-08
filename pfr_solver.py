@@ -139,41 +139,54 @@ def solve_pfr_system(
     stop_at_XA_target.terminal = True
     stop_at_XA_target.direction = 1
 
-    # ODEs integrate karo
-    sol = solve_ivp(
-        pfr_odes,
-        t_span=[0, V_max_integration], # Volume ka range
-        y0=y0,
-        method='RK45',
-        args=ode_args,
-        events=stop_at_XA_target,
-        dense_output=True
-    )
+    # Event function: Jab conversion XA_target pe pahuch jaye, integration ruk jaye
+def stop_at_XA_target(V_reactor, y_vars, *args):
+    return y_vars[0] - XA_target  # y_vars[0] = conversion (X_A)
 
-    if not sol.success:
-        raise RuntimeError(f"PFR ODE integration fail ho gaya: {sol.message}")
+# Event settings: integration ko XA_target pe hi rokna hai
+stop_at_XA_target.terminal = True     # Event hone pe integration terminate ho jaye
+stop_at_XA_target.direction = 1       # Sirf positive direction crossing consider karo (to avoid false triggers)
 
-    if not sol.t_events or not sol.t_events[0]:
-        # Target conversion nahi mila max volume tak
-        print(f"Warning: Target conversion XA_target={XA_target} nahi mila V_max_integration={V_max_integration} m^3 tak.")
-        print(f"  Max conversion mila: {sol.y[0, -1]:.4f} at V = {sol.t[-1]:.4f} m^3, T_out = {sol.y[1, -1]:.2f} K")
-        V_final = sol.t[-1]
-        T_final = sol.y[1, -1]
-        X_achieved = sol.y[0,-1]
-        return V_final, T_final, sol.t, sol.y[0], sol.y[1], X_achieved
+# -----------------------------------------------------
+# 🧪 RK45 method se PFR ke ODEs solve karo
+# -----------------------------------------------------
+sol = solve_ivp(
+    pfr_odes,                          # ODE system: mass & energy balances
+    t_span=[0, V_max_integration],    # Integration range: 0 se max reactor volume tak
+    y0=y0,                             # Initial conditions: [X=0, T=T0]
+    method='RK45',                     # RK45 = Runge-Kutta-Fehlberg 4(5) method (adaptive, non-stiff solver)
+    args=ode_args,                     # Extra arguments jo pfr_odes ko chahiye
+    events=stop_at_XA_target,          # XA_target pe integration stop karne wala event
+    dense_output=True                  # Interpolation allow karo for smooth profile extraction
+)
 
-    # Event hua toh yahan XA_target mil gaya
-    V_at_target = sol.t_events[0][0]
-    state_at_target = sol.sol(V_at_target)
-    X_final = state_at_target[0]
-    T_final = state_at_target[1]
+# Agar integration fail ho jaye (numerical error, bad input etc.), error throw karo
+if not sol.success:
+    raise RuntimeError(f"PFR ODE integration fail ho gaya: {sol.message}")
 
-    # Plotting ke liye profiles nikal lo
-    V_profile = np.linspace(0, V_at_target, 100)
-    profiles = sol.sol(V_profile)
-    X_profile = profiles[0]
-    T_profile = profiles[1]
-    return V_at_target, T_final, V_profile, X_profile, T_profile, X_final
+# Agar XA_target mila hi nahi max volume tak
+if not sol.t_events or not sol.t_events[0]:
+    print(f"Warning: Target conversion XA_target={XA_target} nahi mila V_max_integration={V_max_integration} m^3 tak.")
+    print(f"  Max conversion mila: {sol.y[0, -1]:.4f} at V = {sol.t[-1]:.4f} m^3, T_out = {sol.y[1, -1]:.2f} K")
+    
+    V_final = sol.t[-1]           # Last volume point tak integrate kiya
+    T_final = sol.y[1, -1]        # Us point pe temperature
+    X_achieved = sol.y[0,-1]      # Us point pe conversion
+    
+    return V_final, T_final, sol.t, sol.y[0], sol.y[1], X_achieved  # Profiles bhi return karo for plotting
+
+# ✅ Target conversion mil gaya: Event trigger hua
+V_at_target = sol.t_events[0][0]           # Reactor volume jahan X_A = XA_target
+state_at_target = sol.sol(V_at_target)     # Us point ka interpolated [X, T]
+X_final = state_at_target[0]
+T_final = state_at_target[1]
+
+# 📈 Plotting ke liye profiles generate karo (100 points)
+V_profile = np.linspace(0, V_at_target, 100)
+profiles = sol.sol(V_profile)  # Interpolated X and T values
+
+# Final output: Required volume, exit temperature, and conversion
+return V_at_target, T_final, X_final
 
 # --- Example Usage ---
 if __name__ == "__main__":
