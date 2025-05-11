@@ -186,7 +186,7 @@ def run_pressure_drop_calculator():
         Ac = pipe_options[pipe_selection]
         
         Dp = st.number_input("Particle diameter (inches):", min_value=0.01, value=0.25, step=0.01) / 12 #diameter hai catalyst  particles ka
-        porosity = st.number_input("Void fraction (0-1):", min_value=0.01, max_value=0.99, value=0.4, step=0.01)
+        porosity = st.number_input("Void fraction (0-1):", min_value=0.01, max_value=0.99, value=0.45, step=0.01)
         mass_flow = st.number_input("Mass flow rate (lb/h):", min_value=0.1, value=100.0, step=0.1)
         G = mass_flow / Ac #g is superficial mass velocity jo ki m./ac hojaati hai
         
