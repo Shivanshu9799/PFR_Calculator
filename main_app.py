@@ -321,11 +321,10 @@ def run_pfr_simulator():
 |---------------|----------------------------------------------------------|
 | Plug Flow     | No axial dispersion or back-mixing                       |
 | Stoichiometry | Single A → B reaction, 1:1 molar ratio                   |
-| Kinetics      | Rate = k(T)·C_A·C_B; k(T)=A·exp(–Ea/(R·T))              |
+| Kinetics      | Rate = k(T)·C_A; k(T)=A·exp(–Ea/(R·T))              |
 | Density       | Constant ρ; volumetric flow = F_A0/C_A0                  |
-| Heat Capacity | Cₚ,i(T)=αᵢ+βᵢT+γᵢT²; mixture Cₚ = (C_A·Cₚ,A + C_B·Cₚ,B)/(C_A+C_B) |
-| Enthalpy      | H_A, H_B constant ⇒ ΔH_rxn = H_B – H_A                    |
-| Heat Transfer | Lumped U·a_v·(T_amb–T) to infinite‐sink ambient          |
+| Heat Capacity | Cₚ,i(T)=αᵢ+βᵢT+γᵢT²;                                      |
+| Heat Transfer |  U·a_v·(T_amb–T) to infinite‐sink ambient          |
 | Numerics      | Stop when X hits target (after tiny V>1e–6 to avoid V=0) |
                     """
                 )
