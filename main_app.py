@@ -238,7 +238,7 @@ def run_pressure_drop_calculator():
 # PFR Simulator
 # ==============================================
 def run_pfr_simulator():
-    st.header("NonIsothermal  Plug Flow Reactor (PFR) Simulator with Cp Varying with T")
+    st.header("NonIsothermal  Plug Flow Reactor (PFR) Simulator with Cp Varying with T : For   A -> B - Elementary reaction ")
 
     with st.sidebar:
         st.header("Reaction Parameters")
