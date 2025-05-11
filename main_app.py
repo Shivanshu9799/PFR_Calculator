@@ -246,7 +246,7 @@ def run_pfr_simulator():
         use_direct_A = st.checkbox("Provide Pre-exponential Factor (A)?", value=False)
 
         if use_direct_A:
-            A_arrhenius = st.number_input("A (1/s)", min_value=1e0, value=1e3)
+            A_arrhenius = st.number_input("A (1/s)", min_value=1e0, value=1e2)
             k1_ref_temp = None
         else:
             A_arrhenius = None
