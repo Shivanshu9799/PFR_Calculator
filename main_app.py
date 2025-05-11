@@ -258,14 +258,14 @@ def run_pfr_simulator():
         
         st.header("Heat Transfer & Reactor Settings")
         U = st.number_input("Overall Heat Transfer Coefficient U (W/m².K)", value=300.0)
-        a_v = st.number_input("Area per Unit Volume a_v (1/m)", value=15.0)
-        T_a = st.number_input("Ambient Temperature T_a (K)", value=293.15)
+        a_v = st.number_input("Area per Unit Volume a_v (1/m)",min_value=0.1, value=15.0)
+        T_a = st.number_input("Ambient Temperature T_a (K)",min_value=0.1, value=293.15)
         delta_H_rxn = st.number_input("ΔH_rxn (J/mol)", value=-55000.0)
         
         st.header("Feed Properties")
-        rho = st.number_input("Density ρ (kg/m³)", value=980.0)
-        F_A0 = st.number_input("Inlet Molar Flow Rate F_A0 (mol/s)", value=0.1)
-        C_A0 = st.number_input("Inlet Concentration C_A0 (mol/m³)", value=1.0)
+        rho = st.number_input("Density ρ (kg/m³)",min_value=0.1 value=980.0)
+        F_A0 = st.number_input("Inlet Molar Flow Rate F_A0 (mol/s)",min_value=0.0, value=0.1)
+        C_A0 = st.number_input("Inlet Concentration C_A0 (mol/m³)",min_value=0.0, value=1.0)
         T0 = st.number_input("Inlet Temperature T₀ (K)", value=303.15)
         
         st.header("Cp(T) Parameters")
