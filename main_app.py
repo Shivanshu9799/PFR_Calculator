@@ -268,7 +268,7 @@ def run_pfr_simulator():
         C_A0 = st.number_input("Inlet Concentration C_A0 (mol/m³)",min_value=0.0, value=1.0)
         T0 = st.number_input("Inlet Temperature T₀ (K)", value=303.15)
         
-        st.header("Cp(T) Parameters")
+        st.header("Cp(T) Parameters (Cₚ,i(T)=αᵢ+βᵢT+γᵢT²)")
         alpha = st.number_input("Cp α", value=2000.0)
         beta = st.number_input("Cp β", value=0.5)
         gamma = st.number_input("Cp γ", value=0.0001)
