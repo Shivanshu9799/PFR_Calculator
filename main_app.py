@@ -140,6 +140,8 @@ def run_pfr_cstr_comparison():
                 st.error("Target conversion not achievable in CSTR")
             st.metric("Outlet Temperature", f"{T_out:.2f} K")
 
+
+#starting the second calc.
 # ==============================================
 # Pressure Drop Calculator
 # ==============================================
@@ -153,17 +155,18 @@ def run_pressure_drop_calculator():
         return z_points, P_points, delta_P_points
 
     # Basic parameters
-    P0 = st.number_input("Inlet pressure (atm):", min_value=0.1, value=1.0, step=0.1)
-    L = st.number_input("Length of packed bed (ft):", min_value=0.1, value=5.0, step=0.1)
-
+    P0 = st.number_input("Inlet pressure (atm):", min_value=0.1, value=10.0, step=0.1)
+    L = st.number_input("Length of packed bed (ft):", min_value=0.1, value=60.0, step=0.1)
+#beta0 par choices de rahe ki dirct input or calaculate 
     # Beta0 input method
     beta0_choice = st.radio("β₀ Input Method:", ["Calculate β₀", "Input β₀ directly"])
 
     if beta0_choice == "Input β₀ directly":
         beta0_atm_per_ft = st.number_input("Enter β₀ value (atm/ft):", min_value=0.0001, value=0.01, format="%f")
+
     else:
         pipe_options = {
-            "1/8 inch (0.269\" ID)": 0.000395,
+            "1/8 inch (0.269\" ID)": 0.000395,   #b aa d mai pata chala ki area input circle nahi le sakte .
             "1/4 inch (0.364\" ID)": 0.000723,
             "3/8 inch (0.493\" ID)": 0.001327,
             "1/2 inch (0.622\" ID)": 0.002110,
@@ -176,14 +179,16 @@ def run_pressure_drop_calculator():
             "3 inch (3.068\" ID)": 0.051500,
             "4 inch (4.026\" ID)": 0.088600
         }
+
+        #list banadi valid area input ki 
         
         pipe_selection = st.selectbox("Select Schedule 40 Pipe Size:", list(pipe_options.keys()))
         Ac = pipe_options[pipe_selection]
         
-        Dp = st.number_input("Particle diameter (inches):", min_value=0.01, value=0.25, step=0.01) / 12
+        Dp = st.number_input("Particle diameter (inches):", min_value=0.01, value=0.25, step=0.01) / 12 #diameter hai catalyst  particles ka
         porosity = st.number_input("Void fraction (0-1):", min_value=0.01, max_value=0.99, value=0.4, step=0.01)
         mass_flow = st.number_input("Mass flow rate (lb/h):", min_value=0.1, value=100.0, step=0.1)
-        G = mass_flow / Ac
+        G = mass_flow / Ac #g is superficial mass velocity jo ki m./ac hojaati hai
         
         use_default = st.checkbox("Use default gas properties for air at 260°C", value=True)
         if use_default:
@@ -192,46 +197,48 @@ def run_pressure_drop_calculator():
             mu = st.number_input("Gas viscosity (lb_m/(ft·h)):", value=0.0673)
             rho0 = st.number_input("Gas density (lb_m/ft³):", value=0.413)
 
-        gc = 4.17e8
+        gc = 4.17e8 #unit conversion factor hai for keeping units consistent  lmb * ft/h2 . lbf
         term1 = G * (1 - porosity) / (gc * rho0 * Dp * porosity**3)
         term2 = (150 * (1 - porosity) * mu / Dp) + (1.75 * G)
         beta0 = term1 * term2
-        beta0_atm_per_ft = beta0 / 2116.2
+        beta0_atm_per_ft = beta0 / 2116.2 # division to convert in these units
 
     if st.button("Calculate Pressure Drop"):
         try:
-            z_points, P_points, delta_P_points = calculate_pressure_profile(P0, beta0_atm_per_ft, L)
+            z_points, P_points, delta_P_points = calculate_pressure_profile(P0, beta0_atm_per_ft, L) # aage graph mein use hoga #
             
             st.success("Calculation Complete!")
+            if np.isnan(P_points[-1]) or np.isnan(delta_P_points[-1]):
+             st.error("Pressure calculation resulted in NaN. Please check your input values.")
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("Final pressure", f"{P_points[-1]:.2f} atm")
             with col2:
                 st.metric("Pressure drop", f"{delta_P_points[-1]:.2f} atm")
-
+ #figure and axis create kara hu 
             fig, ax = plt.subplots()
-            ax.plot(z_points, P_points, 'b-', linewidth=2)
-            ax.set_title('Pressure Along Packed Bed')
-            ax.set_xlabel('Bed Length (ft)')
+            ax.plot(z_points, P_points, 'b-', linewidth=2) # b-  blue line ke liye hai #
+            ax.set_title('Pressure Along Packed Bed') # title for plot
+            ax.set_xlabel('Bed Length (ft)') # x & y axix  label #
             ax.set_ylabel('Pressure (atm)')
-            ax.grid(True)
+            ax.grid(True) # turning  on grid for better readibilty #
             st.pyplot(fig)
-
+#Create a pandas DataFrame from the calculated data
             df = pd.DataFrame({
                 'Bed Length (ft)': z_points,
                 'Pressure (atm)': P_points,
                 'Pressure Drop (atm)': delta_P_points
             })
-            st.dataframe(df.iloc[::10])
+            st.dataframe(df.iloc[::10]) # har 10 step ke baad ki values kar rahe till 10 points to plot the graph#
 
         except Exception as e:
             st.error(f"Error: {str(e)}")
-
+#calc 3 
 # ==============================================
 # PFR Simulator
 # ==============================================
 def run_pfr_simulator():
-    st.header("Plug Flow Reactor (PFR) Simulator")
+    st.header("NonIsothermal  Plug Flow Reactor (PFR) Simulator with Cp Varying with T")
 
     with st.sidebar:
         st.header("Reaction Parameters")
@@ -269,25 +276,34 @@ def run_pfr_simulator():
         V_max_integration = st.slider("Max Reactor Volume to Simulate (m³)", 0.1, 20.0, 10.0, step=0.1)
 
     if st.button("Simulate PFR"):
-        with st.spinner("Solving..."):
-            try:
-                V_reactor, T_outlet, V_profile, X_profile, T_profile, X_achieved = solve_pfr_system(
-                    XA_target=XA_target,
-                    A_arrhenius=A_arrhenius,
-                    Ea=Ea,
-                    k1_ref_temp=k1_ref_temp,
-                    U=U,
-                    a_v=a_v,
-                    T_a=T_a,
-                    delta_H_rxn=delta_H_rxn,
-                    rho=rho,
-                    Cp_params={'alpha': alpha, 'beta': beta, 'gamma': gamma},
-                    F_A0=F_A0,
-                    C_A0=C_A0,
-                    T0=T0,
-                    V_max_integration=V_max_integration
-                )
+     with st.spinner("Solving..."):
+        try:
+            V_reactor, T_outlet, V_profile, X_profile, T_profile, X_achieved = solve_pfr_system(
+                XA_target=XA_target,
+                A_arrhenius=A_arrhenius,
+                Ea=Ea,
+                k1_ref_temp=k1_ref_temp,
+                U=U,
+                a_v=a_v,
+                T_a=T_a,
+                delta_H_rxn=delta_H_rxn,
+                rho=rho,
+                Cp_params={'alpha': alpha, 'beta': beta, 'gamma': gamma},
+                F_A0=F_A0,
+                C_A0=C_A0,
+                T0=T0,
+                V_max_integration=V_max_integration
+            )
 
+            # --- Custom error checks ---
+            # 1. Check if output arrays are empty or have non-realistic values
+            if (len(V_profile) == 0 or len(X_profile) == 0 or len(T_profile) == 0 or
+                np.any(np.isnan(V_profile)) or np.any(np.isnan(X_profile)) or np.any(np.isnan(T_profile))):
+                st.error("Non-realistic values, please check input again.")
+            # 2. Check if integration stopped at max volume (slider limit)
+            elif np.isclose(V_profile[-1], V_max_integration, atol=1e-6):
+                st.error("Maximum reactor volume capacity reached. Try increasing the V_max_integration slider.")
+            else:
                 st.success("✅ Simulation complete!")
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -297,11 +313,26 @@ def run_pfr_simulator():
                 with col3:
                     st.metric("Achieved Conversion", f"{X_achieved:.3f}")
 
-                st.subheader("Assumptions Used in Simulation")
-                st.markdown("""... (same assumptions table) ...""")
+                # ---- Assumptions Table (Markdown) ----
+                st.markdown("#### Model Assumptions")
+                st.markdown(
+                    """
+| Category      | Assumption                                               |
+|---------------|----------------------------------------------------------|
+| Plug Flow     | No axial dispersion or back-mixing                       |
+| Stoichiometry | Single A → B reaction, 1:1 molar ratio                   |
+| Kinetics      | Rate = k(T)·C_A·C_B; k(T)=A·exp(–Ea/(R·T))              |
+| Density       | Constant ρ; volumetric flow = F_A0/C_A0                  |
+| Heat Capacity | Cₚ,i(T)=αᵢ+βᵢT+γᵢT²; mixture Cₚ = (C_A·Cₚ,A + C_B·Cₚ,B)/(C_A+C_B) |
+| Enthalpy      | H_A, H_B constant ⇒ ΔH_rxn = H_B – H_A                    |
+| Heat Transfer | Lumped U·a_v·(T_amb–T) to infinite‐sink ambient          |
+| Numerics      | Stop when X hits target (after tiny V>1e–6 to avoid V=0) |
+                    """
+                )
 
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+        except Exception as e:
+            st.error("Non-realistic values, please check input again.\n\nDetails: " + str(e))
+
 
 # ==============================================
 # Main App Router
